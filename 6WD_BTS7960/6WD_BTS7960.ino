@@ -9,8 +9,8 @@
 #define R_LPWM 3
 #define R_LEN  4
 #define R_REN  5
-#define L_RPWM 6
-#define L_LPWM 7
+#define L_LPWM 6
+#define L_RPWM 7
 #define L_LEN  8
 #define L_REN  9
 
@@ -25,6 +25,20 @@ void setup() {
 
   delay(1000);
   Serial.begin(9600);
+}
+
+void runMotor(int leftDrive, int leftReverse, int rightDrive, int rightReverse)
+{
+  digitalWrite(R_REN, HIGH);
+  digitalWrite(R_LEN, HIGH);
+  digitalWrite(L_REN, HIGH);
+  digitalWrite(L_LEN, HIGH);
+  delay(100);
+
+  analogWrite(L_LPWM, leftDrive);        
+  analogWrite(L_RPWM, leftReverse);        
+  analogWrite(R_LPWM, rightDrive);
+  analogWrite(R_RPWM, rightReverse);    
 }
 
 void loop() {
@@ -49,12 +63,6 @@ void loop() {
   data =  ", MS = " + String(motorSteer);
   Serial.println(data);
   
-  digitalWrite(R_REN, HIGH);
-  digitalWrite(R_LEN, HIGH);
-  digitalWrite(L_REN, HIGH);
-  digitalWrite(L_LEN, HIGH);
-  delay(100);
-
   bool forward = true;
   if(90 <= motorDrive && motorDrive <= 110)
   {
@@ -74,25 +82,23 @@ void loop() {
 
   // |_rover__>>
   // 
-  if(100 <= motorSteer && motorSteer <= 140)    // go straight
+  if(motorSteer == 0)   // if transmitter power off the motorSteer value is 0
   {
-    analogWrite(L_LPWM, forward ? 0 : motorDrive);  // Send PWM signal to motor B        
-    analogWrite(L_RPWM, forward ? motorDrive : 0);  // Send PWM signal to motor B        
-    analogWrite(R_LPWM, forward ? motorDrive : 0);  // Send PWM signal to motor A
-    analogWrite(R_RPWM, forward ? 0 : motorDrive);  // Send PWM signal to motor A
+    runMotor(0, 0, 0, 0);
+  }
+  else if(100 <= motorSteer && motorSteer <= 140)    // go straight
+  {
+    runMotor(forward ? motorDrive : 0, forward ? 0 : motorDrive, 
+             forward ? motorDrive : 0, forward ? 0 : motorDrive);
   }
   else if(motorSteer < 100) // turn left
   {
-    analogWrite(L_LPWM, forward ? 0 : motorDrive);         
-    analogWrite(L_RPWM, forward ? motorDrive : 0);         
-    analogWrite(R_LPWM, forward ? 0 : motorDrive); 
-    analogWrite(R_RPWM, forward ? motorDrive : 0); 
+    runMotor(forward ? motorDrive : 0, forward ? 0 : motorDrive, 
+             forward ? 0 : motorDrive, forward ? motorDrive : 0);
   }
   else  // turn right
   {
-    analogWrite(L_LPWM, forward ? motorDrive : 0);         
-    analogWrite(L_RPWM, forward ? 0 : motorDrive);         
-    analogWrite(R_LPWM, forward ? motorDrive : 0); 
-    analogWrite(R_RPWM, forward ? 0 : motorDrive); 
+    runMotor(forward ? 0 : motorDrive, forward ? motorDrive : 0, 
+             forward ? motorDrive : 0, forward ? 0 : motorDrive);
   }
 }
